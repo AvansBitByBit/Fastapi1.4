@@ -19,7 +19,7 @@ app = FastAPI()
 class Features(BaseModel):
     features: List[float]
 
-# om de applicatie te testen!
+# om de applicatie te testen
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
