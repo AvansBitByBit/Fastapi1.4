@@ -4,6 +4,7 @@ from typing import List
 import joblib
 import numpy as np
 from pathlib import Path
+import requests
 
 # load the model from disk
 thisfile = Path(__file__).parent
@@ -29,3 +30,7 @@ def predict(input: Features):
     prediction = model.predict(np.array([input.features]))
     print(prediction)
     return {"prediction": prediction.tolist()}
+
+# api_url = "https://jsonplaceholder.typicode.com/todos/1"
+# response = requests.get(api_url)
+# response.json()
