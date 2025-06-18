@@ -4,8 +4,6 @@ from typing import List
 import joblib
 import numpy as np
 from pathlib import Path
-import requests
-import json
 
 # load the model from disk
 thisfile = Path(__file__).parent
@@ -31,7 +29,3 @@ def predict(input: Features):
     prediction = model.predict(np.array([input.features]))
     print(prediction)
     return {"prediction": prediction.tolist()}
-
-
-DatasetAPI = requests.get('https://bitbybit-api--0000005.orangecliff-c30465b7.northeurope.azurecontainerapps.io/')
-DatasetAPI.Head();

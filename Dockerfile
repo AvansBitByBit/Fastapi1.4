@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 WORKDIR /Fastapi
-COPY requirements.txt .
+COPY requirementsgoat.txt .
 RUN pip install --no-cache-dir -r requirementsgoat.txt
 COPY . .
 EXPOSE 80
