@@ -59,7 +59,7 @@ class TimeFrameRequest(BaseModel):
 # om de applicatie te testen
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"Python AI FastAPI model is live! goed bezig jongens": "Hello World!"}
 
 @app.post("/predict/")
 def predict(input: Features):
@@ -80,7 +80,7 @@ def predict_future(input: FutureFeatures):
 def predict_trash_hotspots(request: TimeFrameRequest):
     # Authenticate
     login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login"
-    login_data = {"username": "Bitbybit@login.nl", "password": "Login123!"}
+    login_data = {"email": "Bitbybit@login.nl", "password": "LoginAPI123!"}
     login_response = requests.post(login_url, json=login_data)
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}

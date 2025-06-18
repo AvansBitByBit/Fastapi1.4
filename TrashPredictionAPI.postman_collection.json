@@ -7,10 +7,19 @@
     {
       "name": "Login to External API",
       "request": {
-        "method": "GET",
-        "header": [],
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"Bitbybit@login.nl\",\n  \"password\": \"LoginAPI123!\"\n}"
+        },
         "url": {
-          "raw": "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/auth/login",
+          "raw": "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login",
           "protocol": "https",
           "host": [
             "bitbybit-api",
@@ -20,8 +29,29 @@
             "io"
           ],
           "path": [
-            "auth",
+            "account",
             "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Root Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io/",
+          "protocol": "https",
+          "host": [
+            "pythonbitbybit",
+            "orangecliff-c30465b7",
+            "northeurope",
+            "azurecontainerapps",
+            "io"
+          ],
+          "path": [
+            ""
           ]
         }
       }
@@ -38,17 +68,82 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"timeframe\": \"30d\"\n}"
+          "raw": "{\n  \"features\": [0.9, 22.5, 14]\n}"
         },
         "url": {
-          "raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io",
-          "protocol": "http",
+          "raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io/predict/",
+          "protocol": "https",
           "host": [
-            "localhost"
+            "pythonbitbybit",
+            "orangecliff-c30465b7",
+            "northeurope",
+            "azurecontainerapps",
+            "io"
           ],
-          "port": "8000",
           "path": [
-            "predict"
+            "predict",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict Future Trash",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"sample1\",\n  \"time\": \"2025-06-18T12:00:00Z\",\n  \"trashType\": \"plastic\",\n  \"location\": \"park\",\n  \"confidence\": 0.95,\n  \"celcius\": 23.5\n}"
+        },
+        "url": {
+          "raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io/predictFuture",
+          "protocol": "https",
+          "host": [
+            "pythonbitbybit",
+            "orangecliff-c30465b7",
+            "northeurope",
+            "azurecontainerapps",
+            "io"
+          ],
+          "path": [
+            "predictFuture"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict Trash Hotspots",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"days\": 7\n}"
+        },
+        "url": {
+          "raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io/predict_trash_hotspots/",
+          "protocol": "https",
+          "host": [
+            "pythonbitbybit",
+            "orangecliff-c30465b7",
+            "northeurope",
+            "azurecontainerapps",
+            "io"
+          ],
+          "path": [
+            "predict_trash_hotspots",
+            ""
           ]
         }
       }
