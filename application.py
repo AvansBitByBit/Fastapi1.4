@@ -24,7 +24,7 @@ class FutureFeatures(BaseModel):
 
 # hierin laden we onze data vanuit de webapi
 # eerst door de auth gaan
-login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/auth/login"
+login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login"
 login_data = {"username": "Bitbybit@login.nl", "password": "Login123!"}
 login_response = requests.post(login_url, json=login_data)
 token = login_response.json()["access_token"]
@@ -79,7 +79,7 @@ def predict_future(input: FutureFeatures):
 @app.post("/predict_trash_hotspots/")
 def predict_trash_hotspots(request: TimeFrameRequest):
     # Authenticate
-    login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/auth/login"
+    login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login"
     login_data = {"username": "Bitbybit@login.nl", "password": "Login123!"}
     login_response = requests.post(login_url, json=login_data)
     token = login_response.json()["access_token"]
