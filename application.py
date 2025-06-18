@@ -4,7 +4,7 @@ from typing import List
 import joblib
 import numpy as np
 from pathlib import Path
-import requests
+
 
 # load the model from disk
 thisfile = Path(__file__).parent
