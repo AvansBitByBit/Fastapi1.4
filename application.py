@@ -1,4 +1,3 @@
-
 import pandas as pd
 from fastapi import FastAPI, requests
 from pydantic import BaseModel
@@ -9,6 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
 import requests
+from fastapi import Query
 
 from roboflow import login
 
@@ -53,6 +53,9 @@ app = FastAPI()
 class Features(BaseModel):
     features: List[float]
 
+class TimeFrameRequest(BaseModel):
+    days: int
+
 # om de applicatie te testen
 @app.get("/")
 def read_root():
@@ -72,3 +75,44 @@ def predict_future(input: FutureFeatures):
     features = [input.confidence, input.celcius, hour]
     prediction = model.predict([features])
     return {"prediction": prediction.tolist()}
+
+@app.post("/predict_trash_hotspots/")
+def predict_trash_hotspots(request: TimeFrameRequest):
+    # Authenticate
+    login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/auth/login"
+    login_data = {"username": "Bitbybit@login.nl", "password": "Login123!"}
+    login_response = requests.post(login_url, json=login_data)
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Fetch litter data
+    api_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/litter"
+    data_response = requests.get(api_url, headers=headers)
+    data = data_response.json()
+
+    # Filter data by time frame
+    cutoff = datetime.utcnow() - pd.Timedelta(days=request.days)
+    filtered = [item for item in data if datetime.fromisoformat(item["time"].replace("Z", "+00:00")) >= cutoff]
+
+    # Prepare features and locations
+    predictions = []
+    for item in filtered:
+        hour = datetime.fromisoformat(item["time"].replace("Z", "+00:00")).hour
+        features = [item["confidence"], item["celcius"], hour]
+        pred = model.predict([features])[0]
+        predictions.append({"location": item["location"], "prediction": pred})
+
+    # Aggregate predictions by location
+    location_counts = {}
+    for p in predictions:
+        loc = p["location"]
+        location_counts[loc] = location_counts.get(loc, 0) + p["prediction"]
+
+    # Find location(s) with highest predicted trash
+    if location_counts:
+        max_pred = max(location_counts.values())
+        hotspots = [loc for loc, val in location_counts.items() if val == max_pred]
+    else:
+        hotspots = []
+
+    return {"hotspots": hotspots, "location_predictions": location_counts}

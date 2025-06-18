@@ -1,0 +1,57 @@
+{
+  "info": {
+    "name": "Trash Prediction API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login to External API",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/auth/login",
+          "protocol": "https",
+          "host": [
+            "bitbybit-api",
+            "orangecliff-c30465b7",
+            "northeurope",
+            "azurecontainerapps",
+            "io"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict Trash Location",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"timeframe\": \"30d\"\n}"
+        },
+        "url": {
+          "raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict"
+          ]
+        }
+      }
+    }
+  ]
+}
