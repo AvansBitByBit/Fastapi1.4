@@ -9,9 +9,11 @@ from datetime import datetime
 from sklearn.ensemble import RandomForestRegressor
 import requests
 from fastapi import Query
-
+import os
+from dotenv import load_dotenv
 from roboflow import login
 
+load_dotenv() #laad de .env file
 
 # Hierin staat de model die de fastapi krijg van onze webapi
 class FutureFeatures(BaseModel):
@@ -25,7 +27,9 @@ class FutureFeatures(BaseModel):
 # hierin laden we onze data vanuit de webapi
 # eerst door de auth gaan
 login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login"
-login_data = {"username": "Bitbybit@login.nl", "password": "Login123!"}
+# login_data = {"username": "Bitbybit@login.nl", "password": "Login123!"}
+login_data = {"username": os.environ.get("API_USERNAME"),"password": os.environ.get("API_PASSWORD")}
+
 login_response = requests.post(login_url, json=login_data)
 token = login_response.json()["access_token"]
 
@@ -60,6 +64,11 @@ class TimeFrameRequest(BaseModel):
 @app.get("/")
 def read_root():
     return {"Python AI FastAPI model is live! goed bezig jongens": "Hello World!"}
+def check_credentials():
+    if os.environ.get("API_USERNAME") and os.environ.get("API_PASSWORD") and os.environ.get("API_PASSWORD1"):
+        return {"status": "Credentials are set"}
+    else:
+        return {"status": "Credentials are missing"}
 
 @app.post("/predict/")
 def predict(input: Features):
@@ -80,7 +89,8 @@ def predict_future(input: FutureFeatures):
 def predict_trash_hotspots(request: TimeFrameRequest):
     # Authenticate
     login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login"
-    login_data = {"email": "Bitbybit@login.nl", "password": "LoginAPI123!"}
+    # login_data = {"email": "Bitbybit@login.nl", "password": "LoginAPI123!"}
+    login_data = {"username": os.environ.get("API_USERNAME"), "password": os.environ.get("API_PASSWORD1")}
     login_response = requests.post(login_url, json=login_data)
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
