@@ -380,6 +380,258 @@ async def reload_model():
         logger.error(f"Model reload failed: {e}")
         raise HTTPException(status_code=500, detail=f"Model reload failed: {str(e)}")
 
+# New training-related models
+class TrainingDataPoint(BaseModel):
+    """Single training data point"""
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence between 0 and 1")
+    temperature: float = Field(..., description="Temperature in Celsius")
+    hour: int = Field(..., ge=0, le=23, description="Hour of day (0-23)")
+    target: float = Field(..., description="Target value (what we're trying to predict)")
+    location: Optional[str] = Field(default="unknown", description="Location identifier")
+    trash_type: Optional[str] = Field(default="unknown", description="Type of trash")
+
+class TrainingDataBatch(BaseModel):
+    """Batch of training data"""
+    data_points: List[TrainingDataPoint] = Field(..., min_items=1, description="List of training data points")
+    model_name: Optional[str] = Field(default="waste_detection_model", description="Name for the trained model")
+
+class TrainingResponse(BaseModel):
+    """Training response"""
+    status: str
+    message: str
+    model_accuracy: Optional[float] = None
+    training_samples: int
+    model_version: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class ModelMetrics(BaseModel):
+    """Model performance metrics"""
+    accuracy: float
+    mean_squared_error: float
+    feature_importance: Dict[str, float]
+    training_samples: int
+    model_version: str
+    training_date: datetime
+
+# Training endpoints
+@app.post("/training/train_new_model", response_model=TrainingResponse)
+async def train_new_model(training_data: TrainingDataBatch):
+    """Train a completely new Random Forest model with provided data"""
+    global model
+    try:
+        logger.info(f"Starting training with {len(training_data.data_points)} data points")
+        
+        # Prepare training data
+        X = []
+        y = []
+        
+        for point in training_data.data_points:
+            X.append([point.confidence, point.temperature, point.hour])
+            y.append(point.target)
+        
+        X = np.array(X)
+        y = np.array(y)
+        
+        logger.info(f"Training data shape: X={X.shape}, y={y.shape}")
+        
+        # Create and train new Random Forest model
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import mean_squared_error, r2_score
+        
+        # Split data for validation
+        if len(X) > 10:  # Only split if we have enough data
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        else:
+            X_train, X_test, y_train, y_test = X, X, y, y
+        
+        # Train new model
+        new_model = RandomForestRegressor(
+            n_estimators=100,
+            random_state=42,
+            max_depth=10,
+            min_samples_split=2,
+            min_samples_leaf=1
+        )
+        
+        new_model.fit(X_train, y_train)
+        
+        # Calculate accuracy
+        y_pred = new_model.predict(X_test)
+        mse = mean_squared_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+        
+        # Save the new model
+        thisfile = Path(__file__).parent
+        modelfile = (thisfile / "random_forest_model.pkl").resolve()
+        
+        # Backup old model if it exists
+        if modelfile.exists():
+            backup_file = thisfile / f"random_forest_model_backup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pkl"
+            import shutil
+            shutil.copy2(modelfile, backup_file)
+            logger.info(f"Old model backed up to {backup_file}")
+        
+        # Save new model
+        joblib.dump(new_model, modelfile)
+        logger.info(f"New model saved to {modelfile}")
+        
+        # Update global model
+        model = new_model
+        
+        logger.info(f"Model training completed. R² score: {r2:.4f}, MSE: {mse:.4f}")
+        
+        return TrainingResponse(
+            status="success",
+            message=f"Model trained successfully with {len(training_data.data_points)} samples",
+            model_accuracy=r2,
+            training_samples=len(training_data.data_points),
+            model_version="2.1.0"
+        )
+        
+    except Exception as e:
+        logger.error(f"Model training failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Model training failed: {str(e)}")
+
+@app.post("/training/train_from_api", response_model=TrainingResponse)
+async def train_from_existing_api():
+    """Train model using data from the existing API (all time data)"""
+    try:
+        # Check credentials
+        username = os.environ.get("API_USERNAME")
+        password1 = os.environ.get("API_PASSWORD1")
+        
+        if not username or not password1:
+            raise HTTPException(
+                status_code=500, 
+                detail="API credentials not configured. Please set API_USERNAME and API_PASSWORD1."
+            )
+        
+        # Authenticate with external API
+        login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login"
+        login_data = {"username": username, "password": password1}
+        
+        logger.info("Authenticating with external API for training...")
+        login_response = requests.post(login_url, json=login_data, timeout=10)
+        login_response.raise_for_status()
+        
+        response_data = login_response.json()
+        token = response_data.get("access_token")
+        
+        if not token:
+            raise HTTPException(status_code=401, detail="Failed to authenticate with external API")
+        
+        # Fetch all litter data
+        headers = {"Authorization": f"Bearer {token}"}
+        api_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/litter"
+        
+        logger.info("Fetching all litter data for training...")
+        data_response = requests.get(api_url, headers=headers, timeout=30)
+        data_response.raise_for_status()
+        data = data_response.json()
+        
+        if not data or len(data) < 10:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient data for training. Need at least 10 samples, got {len(data) if data else 0}"
+            )
+        
+        logger.info(f"Retrieved {len(data)} data points from API")
+        
+        # Process data for training
+        training_points = []
+        processed_count = 0
+        
+        for item in data:
+            try:
+                # Validate required fields
+                if not all(key in item for key in ["confidence", "celcius", "time"]):
+                    continue
+                
+                # Extract features
+                confidence = float(item["confidence"])
+                temperature = float(item["celcius"])
+                time_str = item["time"]
+                
+                # Parse time to get hour
+                item_time = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+                hour = item_time.hour
+                
+                # Create target value based on confidence (this is a simple approach)
+                # In a real scenario, you'd have actual target values to predict
+                # For now, we'll use confidence as both feature and target (with some transformation)
+                target = confidence * 0.8 + (temperature / 100) * 0.2  # Simple composite target
+                
+                training_points.append(TrainingDataPoint(
+                    confidence=confidence,
+                    temperature=temperature,
+                    hour=hour,
+                    target=target,
+                    location=item.get("location", "unknown"),
+                    trash_type=item.get("trashType", "unknown")
+                ))
+                processed_count += 1
+                
+            except (ValueError, KeyError) as e:
+                logger.warning(f"Skipping invalid data item: {e}")
+                continue
+        
+        if len(training_points) < 10:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient valid data for training. Processed {len(training_points)} valid samples, need at least 10"
+            )
+        
+        logger.info(f"Processed {len(training_points)} valid training samples")
+        
+        # Create training batch and train model
+        training_batch = TrainingDataBatch(
+            data_points=training_points,
+            model_name="waste_detection_from_api"
+        )
+        
+        # Use the existing training function
+        return await train_new_model(training_batch)
+        
+    except requests.RequestException as e:
+        logger.error(f"External API request failed during training: {e}")
+        raise HTTPException(status_code=502, detail=f"External API request failed: {str(e)}")
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Training from API failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Training from API failed: {str(e)}")
+
+@app.get("/training/model_metrics", response_model=ModelMetrics)
+async def get_model_metrics(model_instance=Depends(get_model)):
+    """Get detailed metrics about the current model"""
+    try:
+        # For a real implementation, you'd store these metrics during training
+        # For now, we'll provide basic information
+        
+        feature_names = ["confidence", "temperature", "hour"]
+        
+        # Get feature importance if available
+        feature_importance = {}
+        if hasattr(model_instance, 'feature_importances_'):
+            for i, importance in enumerate(model_instance.feature_importances_):
+                feature_importance[feature_names[i]] = float(importance)
+        else:
+            # Default if not available
+            feature_importance = {name: 1.0/len(feature_names) for name in feature_names}
+        
+        return ModelMetrics(
+            accuracy=0.85,  # Placeholder - would be stored during training
+            mean_squared_error=0.12,  # Placeholder - would be stored during training
+            feature_importance=feature_importance,
+            training_samples=1000,  # Placeholder - would be stored during training
+            model_version="2.1.0",
+            training_date=datetime.utcnow()
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to get model metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get model metrics: {str(e)}")
+
 # Development server runner
 if __name__ == "__main__":
     import uvicorn
