@@ -65,7 +65,14 @@ def predict(input: Features):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fetching dataset failed: {str(e)}")
+    input_pred = model.predict(np.array([input.features]))[0]
+    all_preds = model.predict(X)
+    same_pred_count = int(np.sum(all_preds == input_pred))
 
-    prediction = model.predict(np.array([input.features]))
+    return {
+        "AdresPredection": input_pred, # De locatie waar het meeste afval zal liggen
+        "confidence": "High" if input.features[0] > 0.8 else "Low", #Confidence dat de vertrouwen geeft van de voorspelling
+        "CountOfPossibleLitter": same_pred_count, # hoeveel afval er zal liggen op de voorspelde locatie
+        "MatchWithDataset": round(same_pred_count / len(data_list) * 100, 2), # Percentage van de voorspelde items in de dataset
 
-    return {"prediction": prediction.tolist(), "confidence": "High" if input.features[0] > 0.5 else "Low"}
+    }
