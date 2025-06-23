@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-username = os.environ.get("API_USERNAME")
-password1 = os.environ.get("API_PASSWORD1")
+username = "Bitbybit11@login.nl"#os.environ.get("API_USERNAME")
+password1 = "Login123!!!"#os.environ.get("API_PASSWORD1")
 
 # if not username or not password1:
 #     raise RuntimeError("API credentials not configured. Please set API_USERNAME and API_PASSWORD1.")
