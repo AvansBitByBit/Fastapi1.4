@@ -73,6 +73,6 @@ def predict(input: Features):
         "AdresPredection": input_pred, # De locatie waar het meeste afval zal liggen
         "confidence": "High" if input.features[0] > 0.8 else "Low", #Confidence dat de vertrouwen geeft van de voorspelling
         "CountOfPossibleLitter": same_pred_count, # hoeveel afval er zal liggen op de voorspelde locatie
-        "MatchWithDataset": round(same_pred_count / len(data_list) * 100, 2), # Percentage van de voorspelde items in de dataset
+        "MatchWithModel": round(same_pred_count / len(data_list) * 100, 2), # Percentage van de voorspelde items in de dataset
 
     }
