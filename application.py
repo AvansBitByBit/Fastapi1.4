@@ -7,6 +7,8 @@ import numpy as np
 from pathlib import Path
 import requests
 from Random_forest import process_dataset, train_random_forest
+from dotenv import load_dotenv
+load_dotenv()
 
 
 username = os.environ.get("API_USERNAME")
