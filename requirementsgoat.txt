@@ -1,7 +1,7 @@
 fastapi[standard]==0.115.5
 pydantic==2.10.2
 joblib==1.4.2
-numpy==2.0.2
+numpy==1.26.4
 loguru
 scikit-learn==1.5.1
 requests==2.32.3
