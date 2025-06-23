@@ -60,11 +60,12 @@ def predict(input: Features):
             data_list = dataset["litter"]
         else:
             data_list = dataset
-        X, y = process_dataset(data_list)
+        X, y, confidences = process_dataset(data_list)
         model = train_random_forest(X, y)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fetching dataset failed: {str(e)}")
 
     prediction = model.predict(np.array([input.features]))
-    return {"prediction": prediction.tolist()}
+
+    return {"prediction": prediction.tolist(), "confidence": "High" if input.features[0] > 0.5 else "Low"}
