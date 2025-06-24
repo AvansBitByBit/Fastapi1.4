@@ -1,11 +1,23 @@
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from datetime import datetime
+from dateutil.parser import parse
 
 def process_dataset(data_list):
-    # Extract features, targets, and confidence values
-    X = [[item["temperature"]] for item in data_list]
-    y = [item["location"] for item in data_list]
-    confidences = [item["confidence"] for item in data_list]
+    X, y, confidences = [], [], []
+    for item in data_list:
+        dt_str = item.get("time") or item.get("date")
+        dt = parse(dt_str)
+        features = [
+            dt.month,
+            dt.day,
+            dt.weekday(),
+            int(dt.month in [12, 1, 2]),  # is_winter
+            int(dt.month in [6, 7, 8]),   # is_summer
+        ]
+        X.append(features)
+        y.append(item["location"])
+        confidences.append(item.get("confidence", 1.0))
     return np.array(X), np.array(y), np.array(confidences)
 
 def train_random_forest(X, y):
