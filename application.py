@@ -14,8 +14,8 @@ from dateutil.parser import parse
 
 load_dotenv()
 
-username = os.environ.get("API_USERNAME")  #secrets in azure
-password1 = os.environ.get("API_PASSWORD") #secrets in azure
+username = "Bitbybit11@login.nl"#os.environ.get("API_USERNAME")  #secrets in azure
+password1 = "Login123!!!"#os.environ.get("API_PASSWORD") #secrets in azure
 
 login_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/account/login" #api login url
 data_url = "https://bitbybit-api.orangecliff-c30465b7.northeurope.azurecontainerapps.io/litter" #api data url
