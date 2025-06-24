@@ -1,0 +1,73 @@
+{
+	"info": {
+		"_postman_id": "251f07e1-ddc1-44cc-bc31-cbce0b5ba710",
+		"name": "New Trashprediction",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42632898"
+	},
+	"item": [
+		{
+			"name": "Check system up time",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io/",
+					"protocol": "https",
+					"host": [
+						"pythonbitbybit",
+						"orangecliff-c30465b7",
+						"northeurope",
+						"azurecontainerapps",
+						"io"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Train",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"date\": \"2024-06-24T11:12:32\",\r\n  \"temperature\":32\r\n}\r\n\r\n// Deze endpoint logt in. haalt de dataset op verwerkt de data traint een nieuw model met de laatste data en gebruikt dat model om een voorspelling te doen",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://pythonbitbybit.orangecliff-c30465b7.northeurope.azurecontainerapps.io/Predict/",
+					"protocol": "https",
+					"host": [
+						"pythonbitbybit",
+						"orangecliff-c30465b7",
+						"northeurope",
+						"azurecontainerapps",
+						"io"
+					],
+					"path": [
+						"Predict",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
