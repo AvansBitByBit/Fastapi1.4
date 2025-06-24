@@ -8,12 +8,14 @@ def process_dataset(data_list):
     for item in data_list:
         dt_str = item.get("time") or item.get("date")
         dt = parse(dt_str)
+        temperature = item.get("temperature", 15.0)  # Default if missing
         features = [
             dt.month,
             dt.day,
             dt.weekday(),
             int(dt.month in [12, 1, 2]),  # is_winter
             int(dt.month in [6, 7, 8]),   # is_summer
+            temperature
         ]
         X.append(features)
         y.append(item["location"])

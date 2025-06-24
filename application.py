@@ -29,7 +29,7 @@ app = FastAPI()
 
 class DateInput(BaseModel):
     date: str  # Accepts ISO date/time strings
-
+    temperature: float
 @app.get("/")
 def read_root():
     return {"Hello": "World This api is up and running!"}
@@ -48,6 +48,7 @@ def predict(input: DateInput):
         dt.weekday(),
         int(dt.month in [12, 1, 2]),  # is_winter
         int(dt.month in [6, 7, 8]),   # is_summer
+        input.temperature
     ]
 
     # Login to API
